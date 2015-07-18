@@ -26,13 +26,16 @@ def getWatFiles( config, repo=None ):
 # http://misc.flogisoft.com/bash/tip_colors_and_formatting
 TERM_RESET = '\033[0m'
 TERM_BOLD = '\033[1m'
+TERM_BLUE = '\033[34m'
 TERM_LIGHT_GREEN = '\033[92m'
 TERM_LIGHT_MAGENTA = '\033[95m'
 TERM_LIGHT_CYAN = '\033[96m'
 
+TERM_KEYWORD_COLOR = TERM_BLUE
+
 specialSymbols = {
         '[T]': TERM_LIGHT_MAGENTA + TERM_BOLD,
-        '[C]': TERM_BOLD,
+        '[C]': TERM_LIGHT_CYAN,
         '[N]': TERM_RESET
     }
 
@@ -74,7 +77,7 @@ class WatEntry( object ):
     def printEntry( self, withColor=True ):
         print formatText( self.text, withColor=withColor )
         if len( self.keywords ) > 0:
-            startFormat = TERM_LIGHT_CYAN if withColor else ''
+            startFormat = TERM_KEYWORD_COLOR if withColor else ''
             endFormat = TERM_RESET if withColor else ''
             print '\n    %s%s%s' % ( startFormat, ', '.join( self.keywords ), endFormat )
 
