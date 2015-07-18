@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Copyright (c) 2015 tsiemens
 import os
 import re
 import argparse
