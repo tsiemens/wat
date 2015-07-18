@@ -36,9 +36,12 @@ specialSymbols = {
         '[N]': TERM_RESET
     }
 
-def formatText( text ):
+def formatText( text, withColor=True ):
     for k, v in specialSymbols.iteritems():
-        text = text.replace( k, v )
+        if withColor:
+            text = text.replace( k, v )
+        else:
+            text = text.replace( k, '' )
     return text
 
 def topicNameFromFile( filename ):
@@ -68,10 +71,12 @@ class WatEntry( object ):
                 return True
         return re.search( regex, self.text, flags=flags )
 
-    def printEntry( self ):
-        print formatText( self.text )
+    def printEntry( self, withColor=True ):
+        print formatText( self.text, withColor=withColor )
         if len( self.keywords ) > 0:
-            print '\n    %s%s%s' % ( TERM_LIGHT_CYAN, ', '.join( self.keywords ), TERM_RESET )
+            startFormat = TERM_LIGHT_CYAN if withColor else ''
+            endFormat = TERM_RESET if withColor else ''
+            print '\n    %s%s%s' % ( startFormat, ', '.join( self.keywords ), endFormat )
 
 def parseWatFile( filename ):
     with open( filename, 'r' ) as watfile:
@@ -118,6 +123,8 @@ def main():
                             help='Ingore case in a regex search.' )
     argparser.add_argument( '--repo', metavar='ALIAS', type=str,
                             help='Search in a specific repo.' )
+    argparser.add_argument( '--no-color', action='store_true',
+                            help='Do not output with tty formatting.' )
     args = argparser.parse_args()
 
     config = ConfigParser.RawConfigParser()
@@ -135,6 +142,9 @@ def main():
         for repo in config.sections():
             print '%s: %s' % ( repo.replace( 'repo ', '' ), config.get( repo, 'dir' ) )
     else:
+        if args.repo and not config.has_section( repoConfigSectionName( args.repo ) ):
+            print 'No repos named %s' % args.repo
+            quit()
         watFiles = getWatFiles( config, repo=args.repo )
         if args.topic:
             watFiles = filter( lambda wf: topicNameFromFile( wf ) == args.topic, watFiles )
@@ -147,8 +157,11 @@ def main():
             quit()
 
         if args.list_topics:
-            for wf in watFiles:
-                print topicNameFromFile( wf )
+            topics = set( topicNameFromFile( wf ) for wf in watFiles )
+            topics = [ t for t in topics ]
+            topics.sort()
+            for topic in topics:
+                print topic
         else:
             entries = []
             for f in watFiles:
@@ -163,7 +176,7 @@ def main():
                         entries )
 
             for entry in entries:
-                entry.printEntry()
+                entry.printEntry( withColor=not args.no_color )
                 print ''
 
 if __name__ == '__main__':
