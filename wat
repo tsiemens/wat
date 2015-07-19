@@ -26,12 +26,15 @@ def getWatFiles( config, repo=None ):
 # http://misc.flogisoft.com/bash/tip_colors_and_formatting
 TERM_RESET = '\033[0m'
 TERM_BOLD = '\033[1m'
+TERM_GREEN = '\033[32m'
 TERM_BLUE = '\033[34m'
 TERM_LIGHT_GREEN = '\033[92m'
+TERM_LIGHT_BLUE = '\033[94m'
 TERM_LIGHT_MAGENTA = '\033[95m'
 TERM_LIGHT_CYAN = '\033[96m'
 
 TERM_KEYWORD_COLOR = TERM_BLUE
+TERM_TOPIC_COLOR = TERM_GREEN + TERM_BOLD
 
 specialSymbols = {
         '[T]': TERM_LIGHT_MAGENTA + TERM_BOLD,
@@ -51,15 +54,17 @@ def topicNameFromFile( filename ):
     return os.path.split( filename )[ 1 ].replace( '.wat', '' )
 
 class WatEntry( object ):
-    def __init__( self ):
+    def __init__( self, topic ):
         self.text = ''
+        self.topic = topic
         self.keywords = []
 
     def matchesKeywords( self, keywords ):
         ''' Loose keyword matching. eg. "file" will match "files" '''
+        toSearch = self.keywords + [ self.topic ]
         for kw in keywords:
             matched = False
-            for skw in self.keywords:
+            for skw in toSearch:
                 if kw.lower() in skw.lower():
                     matched = True
                     break
@@ -69,17 +74,24 @@ class WatEntry( object ):
 
     def matchesPattern( self, regex, ignoreCase=False ):
         flags = re.IGNORECASE if ignoreCase else 0
-        for kw in self.keywords:
+        for kw in self.keywords + [ self.topic ]:
             if re.search( regex, kw, flags=flags ):
                 return True
         return re.search( regex, self.text, flags=flags )
 
     def printEntry( self, withColor=True ):
         print formatText( self.text, withColor=withColor )
+        topicFormat = TERM_TOPIC_COLOR if withColor else ''
+        kwFormat = TERM_KEYWORD_COLOR if withColor else ''
+        endFormat = TERM_RESET if withColor else ''
+        printStr = '\n    %s%s' % ( topicFormat, self.topic )
         if len( self.keywords ) > 0:
-            startFormat = TERM_KEYWORD_COLOR if withColor else ''
-            endFormat = TERM_RESET if withColor else ''
-            print '\n    %s%s%s' % ( startFormat, ', '.join( self.keywords ), endFormat )
+            kwStr = '%s%s%s%s' % ( endFormat, kwFormat, ', '.join( self.keywords ), endFormat )
+            printStr = ', '.join( [ printStr, kwStr ] )
+        else:
+            printStr += endFormat
+
+        print printStr
 
 def parseWatFile( filename ):
     with open( filename, 'r' ) as watfile:
@@ -89,7 +101,7 @@ def parseWatFile( filename ):
         for line in watfile.readlines():
             if line.strip().startswith( '[ENTRY]' ):
                 inEntry = True
-                currentEntry = WatEntry()
+                currentEntry = WatEntry( topicNameFromFile( filename ) )
                 entries.append( currentEntry )
                 currentEntry.keywords = [ s for s in line.replace('[ENTRY]', '').replace( '\n', '')\
                                         .split( ' ' ) if len( s ) > 0 ]
