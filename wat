@@ -28,6 +28,7 @@ TERM_RESET = '\033[0m'
 TERM_BOLD = '\033[1m'
 TERM_GREEN = '\033[32m'
 TERM_BLUE = '\033[34m'
+TERM_DARK_GREY = '\033[90m'
 TERM_LIGHT_GREEN = '\033[92m'
 TERM_LIGHT_BLUE = '\033[94m'
 TERM_LIGHT_MAGENTA = '\033[95m'
@@ -39,7 +40,8 @@ TERM_TOPIC_COLOR = TERM_GREEN + TERM_BOLD
 specialSymbols = {
         '[T]': TERM_LIGHT_MAGENTA + TERM_BOLD,
         '[C]': TERM_LIGHT_CYAN,
-        '[N]': TERM_RESET
+        '[N]': TERM_RESET,
+        '[#]': TERM_DARK_GREY,
     }
 
 def formatText( text, withColor=True ):
